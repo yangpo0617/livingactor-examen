@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 #[AsController]
 class UpdateLeaveRequestStatus extends AbstractController
@@ -17,12 +18,14 @@ class UpdateLeaveRequestStatus extends AbstractController
         private readonly EntityManagerInterface $entityManager
     ) {}
 
-    public function __invoke(Request $request, LeaveRequest $leaveRequest): Response
-    {
+    public function __invoke(
+        Request $request,
+        LeaveRequest $leaveRequest,
+    ): Response {
         $data = json_decode($request->getContent(), true);
         if (isset($data['status'])) {
             if (!in_array($data['status'], [LeaveRequestStatusEnum::APPROVED->value, LeaveRequestStatusEnum::REJECTED->value, LeaveRequestStatusEnum::PENDING->value])) {
-                throw new \Exception('Status is not any of PENDING, APPROVED or REJECTED, please fill a valid status');
+                throw new \Exception('Le statut n\'est ni EN ATTENTE, ni APPROUVÉ, ni REJETÉ, veuillez saisir un statut valide');
             }
         }
         switch ($data['status']) {

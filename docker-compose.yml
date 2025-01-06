@@ -1,0 +1,45 @@
+services:
+  database:
+    image: postgres:17.0
+    restart: always
+    shm_size: 512mb
+    environment:
+      POSTGRES_PASSWORD: toto44
+      POSTGRES_USER: postgres
+      POSTGRES_DB: livingactor_demo
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./infra/volumes/db:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - livingactor_demo.nw
+
+  php:
+    build:
+      context: ./infra/images/php/dev
+    volumes:
+      - ./infra/config/project.ini:/usr/local/etc/php/conf.d/project.ini:ro
+      - ./:/var/www/app
+    tty: true
+    environment:
+      APP_ENV: "dev"
+      DATABASE_URL: "postgresql://postgres:toto44@database:5432/livingactor_demo?serverVersion=17.0 (Debian 17.0-1.pgdg120+1)&charset=utf8"
+    networks:
+      - livingactor_demo.nw
+
+  nginx:
+    image: nginx:1.27
+    volumes:
+      - ./infra/config/virtualhost.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./:/var/www/app
+    tty: true
+    depends_on:
+      - php
+    ports:
+      - 8071:80
+    networks:
+      - livingactor_demo.nw
+
+networks:
+  livingactor_demo.nw:
